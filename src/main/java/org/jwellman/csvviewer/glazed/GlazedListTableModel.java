@@ -106,29 +106,43 @@ public class GlazedListTableModel implements DataHintAware, AdvancedTableFormat<
 			// Determine data hint for remaining columns;
 			// TODO this current implementation has the drawback that it only looks at the first record which may have blank fields
 			// and therefore it may categorize those fields incorrectly.
-			final String[] record = records.get(0);
+			final String[] record = records.get(0); int column = 1;
 			for (String field : record) {
 				System.out.print(field);
-				if (StringUtils.isNumeric(field)) {
-					// Since decimal points and field separators are non-numeric, this condition only handles integer data
-					if (field.startsWith("0")) {
-						dataHints.add(DataHint.ZEROPADDED_INTEGER);
-						System.out.println(" appears to be ZEROPADDED_INTEGER");
-					} else {
+				
+				// TODO for now, maybe a gui option to include hints or not
+				boolean includeHints = false;
+				if (includeHints) {
+					if (StringUtils.isNumeric(field)) {
+						// Since decimal points and field separators are non-numeric, this condition only handles integer data
+						if (field.startsWith("0")) {
+							dataHints.add(DataHint.ZEROPADDED_INTEGER);
+							System.out.println(" appears to be ZEROPADDED_INTEGER");
+						} else {
+							dataHints.add(DataHint.NUMERIC);
+							System.out.println(" appears to be NUMERIC");
+						}
+					} else if (NumberUtils.isCreatable(field)) {
+						// This condition handles data that contains other non-numeric characters such as decimal points and field separators.
+						// Therefore, we don't really know if it is floating point or integers with field separators.
+						// Finally, I should note, that I don't think I really have a plan for field separators... in practice,
+						// this condition is so far meant for floating point values with decimal point only.
 						dataHints.add(DataHint.NUMERIC);
 						System.out.println(" appears to be NUMERIC");
+					} else {
+						dataHints.add(DataHint.STRING);
+						System.out.println(" appears to be ALPHABETIC");
 					}
-				} else if (NumberUtils.isCreatable(field)) {
-					// This condition handles data that contains other non-numeric characters such as decimal points and field separators.
-					// Therefore, we don't really know if it is floating point or integers with field separators.
-					// Finally, I should note, that I don't think I really have a plan for field separators... in practice,
-					// this condition is so far meant for floating point values with decimal point only.
-					dataHints.add(DataHint.NUMERIC);
-					System.out.println(" appears to be NUMERIC");
-				} else {
-					dataHints.add(DataHint.STRING);
-					System.out.println(" appears to be ALPHABETIC");
+				} else {					
+					if (column == 1) {
+						// even when we don't want hints, line number is ALWAYS numeric and useful for sorting
+						dataHints.add(DataHint.NUMERIC);
+					} else {
+						dataHints.add(DataHint.STRING);
+					}
 				}
+				
+				column++;
 			}
 
 			// GlazedLists
